@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ product.title }}{% endblock %}
+{% block content %}
+<div class="bg-white shadow-lg rounded-xl max-w-4xl w-full p-8 grid grid-cols-1 md:grid-cols-2 gap-6 mx-auto">
+    <!-- Product Image -->
+    <div>
+      <img src="{{ product.product_image }}" alt="{{ product.title }}" class="w-full h-auto rounded-lg shadow-sm object-contain" />
+    </div>
+    <!-- Product Details -->
+    <div class="space-y-4">
+      <h2 class="text-3xl font-bold text-gray-800">{{ product.title }}</h2>
+      <h4 class="text-2xl text-green-600 font-semibold">{{ product.price }}€</h4>
+      <p class="text-sm text-gray-600">Status: <span class="font-medium">{{ product.status }}</span></p>
+      <p class="text-sm text-gray-600">Count in stock: <span class="font-medium">{{ product.count }}</span></p>
+      <div>
+        {% if product.isavaible %}
+          <p class="text-sm text-green-600 font-medium">✔️ In Stock</p>
+        {% else %}
+          <p class="text-sm text-red-500 font-medium">❌ Not Available</p>
+        {% endif %}
+      </div>
+      <p class="text-sm text-gray-600">Manufacturer: <span class="font-medium">{{ product.manufacturer_id.name }}</span></p>
+      <p class="text-sm text-gray-600">Category: <span class="font-medium">{{ product.category_id.name }}</span></p>
+      <div class="mt-4 text-gray-700 leading-relaxed">
+        {{ product.description }}
+      </div>
+      <!-- Add to Cart Button -->
+      <form method="post" action="/add_to_cart/{{product.id}}/">
+        {% csrf_token %}
+        <input type="submit" value="🛒 Add to Cart"
+               class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-lg shadow cursor-pointer transition duration-200" />
+      </form>
+    </div>
+</div>
+{% endblock %}

@@ -4,3 +4,8 @@
 ### for admin permissions log in as ADMIN:
 ### username: ADMIN
 ### password: amazoncopyadmin
+
+what admin can do:
+- delete Products from other users
+- add new Category / new Manufacturer
+- also has all permissions that have other users

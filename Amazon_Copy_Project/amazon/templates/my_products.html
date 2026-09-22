@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "My Products" %}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Шапка страницы -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">{% trans "My Products" %}</h1>
+            <p class="text-sm sm:text-base text-gray-500 mt-1">{% trans "Manage items you are selling on the marketplace" %}</p>
+        </div>
+        <a href="/add_product" class="group relative inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-orange-500 text-white font-semibold py-2.5 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+            <svg class="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span>{% trans "Add New Product" %}</span>
+        </a>
+    </div>
+
+    {% if products %}
+        <!-- Сводная статистика (Дашборд) -->
+        <div class="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6" id="stats-dashboard">
+            <!-- Всего товаров -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-200/75 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gray-900 text-white rounded-xl flex items-center justify-center shadow-md">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">{% trans "Total Products" %}</p>
+                        <h3 class="text-2xl font-extrabold text-gray-900">{{ products|length }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Всего просмотров -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-200/75 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center border border-blue-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">{% trans "Total Views" %}</p>
+                        <h3 class="text-2xl font-extrabold text-gray-900" id="dash-views">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Всего продаж -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-200/75 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center border border-green-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">{% trans "Total Sold" %}</p>
+                        <h3 class="text-2xl font-extrabold text-gray-900" id="dash-sold">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Средняя конверсия -->
+            <div class="bg-white rounded-2xl p-5 border border-gray-200/75 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center border border-purple-100">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">{% trans "Avg. Conversion" %}</p>
+                        <h3 class="text-2xl font-extrabold text-gray-900" id="dash-cr">0.0%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ТОП ТОВАРЫ (Новый блок) -->
+        <div class="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <!-- Лидер по просмотрам -->
+            <div class="bg-white rounded-2xl p-5 border border-blue-200/60 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-xs font-bold uppercase tracking-wider text-blue-500 mb-0.5">{% trans "Most Viewed" %}</p>
+                    <h3 class="text-base font-bold text-gray-900 truncate" id="dash-top-viewed">...</h3>
+                    <p class="text-sm text-gray-500 mt-0.5"><span id="dash-top-viewed-count" class="font-bold text-gray-800">0</span> {% trans "views" %}</p>
+                </div>
+            </div>
+
+            <!-- Лидер по продажам -->
+            <div class="bg-white rounded-2xl p-5 border border-green-200/60 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+                <div class="w-12 h-12 bg-green-50 text-green-500 rounded-xl flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-xs font-bold uppercase tracking-wider text-green-500 mb-0.5">{% trans "Best Seller" %}</p>
+                    <h3 class="text-base font-bold text-gray-900 truncate" id="dash-top-sold">...</h3>
+                    <p class="text-sm text-gray-500 mt-0.5"><span id="dash-top-sold-count" class="font-bold text-gray-800">0</span> {% trans "sold" %}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Сетка товаров -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
+            {% for product in products %}
+                <div class="product-card group bg-white rounded-2xl shadow-sm hover:shadow-xl overflow-hidden border border-gray-200/75 flex flex-col justify-between transition-all duration-300"
+                     data-views="{{ product.view_count|default:0 }}"
+                     data-sold="{{ product.sold_count|default:0 }}">
+
+                    <a href="/info_product/{{ product.id }}" class="block cursor-pointer flex-grow flex flex-col relative">
+
+                        <!-- Плавающий бейдж статуса -->
+                        <div class="absolute top-3 right-3 z-10">
+                            {% if product.count > 0 %}
+                                <span class="bg-white/95 backdrop-blur-sm text-green-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm border border-green-100 flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>{% trans "Available" %}
+                                </span>
+                            {% else %}
+                                <span class="bg-white/95 backdrop-blur-sm text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm border border-red-100 flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>{% trans "Out of Stock" %}
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Контейнер для картинки -->
+                        <div class="w-full aspect-square bg-white flex items-center justify-center p-6 relative overflow-hidden border-b border-gray-100">
+                            {% if product.product_image %}
+                                <img src="{{ product.product_image }}" alt="{{ product.title }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out">
+                            {% else %}
+                                <svg class="w-12 h-12 text-gray-300 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            {% endif %}
+                        </div>
+
+                        <!-- Информация о товаре -->
+                        <div class="p-4 sm:p-5 flex flex-col flex-grow bg-gray-50/30">
+                            <h3 class="product-title text-sm sm:text-base font-semibold text-gray-800 line-clamp-2 group-hover:text-orange-500 transition-colors mb-1.5" title="{{ product.title }}">{{ product.title }}</h3>
+                            <p class="text-xl sm:text-2xl font-extrabold text-gray-900 mb-2">€{{ product.price }}</p>
+
+                            <!-- Сетка статистики товара -->
+                            <div class="grid grid-cols-3 gap-1 sm:gap-2 mt-auto mb-2 pt-3 border-t border-gray-200/70">
+                                <!-- Просмотры -->
+                                <div class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-white border border-gray-100 shadow-sm text-center">
+                                    <svg class="w-4 h-4 text-blue-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    <span class="text-[9px] sm:text-[10px] leading-tight uppercase break-words w-full text-gray-400 font-bold mb-0.5">{% trans "views" %}</span>
+                                    <span class="text-sm font-extrabold text-gray-800">{{ product.view_count }}</span>
+                                </div>
+                                <!-- Продажи -->
+                                <div class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-white border border-gray-100 shadow-sm text-center">
+                                    <svg class="w-4 h-4 text-green-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                                    <span class="text-[9px] sm:text-[10px] leading-tight uppercase break-words w-full text-gray-400 font-bold mb-0.5">{% trans "Sold" %}</span>
+                                    <span class="text-sm font-extrabold text-gray-800">{{ product.sold_count }}</span>
+                                </div>
+                                <!-- Остаток -->
+                                <div class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-xl bg-white border border-gray-100 shadow-sm text-center">
+                                    <svg class="w-4 h-4 text-orange-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                    <span class="text-[9px] sm:text-[10px] leading-tight uppercase break-words w-full text-gray-400 font-bold mb-0.5">{% trans "in stock" %}</span>
+                                    <span class="text-sm font-extrabold text-gray-800">{{ product.count }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Таймер удаления -->
+                            {% if product.count <= 0 and product.out_of_stock_since %}
+                                <div class="mt-3 bg-orange-50 border border-orange-100 rounded-lg p-3 flex items-start gap-2">
+                                    <svg class="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <div class="text-sm text-orange-800">
+                                        <span class="font-semibold block mb-0.5">{% trans "Removal in:" %}</span>
+                                        <span class="countdown-timer font-mono font-bold" data-start="{{ product.out_of_stock_since|date:'c' }}">{% trans "Calculating..." %}</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </a>
+
+                    <!-- Кнопки управления -->
+                    <div class="p-4 sm:p-5 pt-0 flex gap-2 w-full bg-gray-50/30">
+                        <a href="{% url 'edit_product' product.id %}" class="flex-1 flex justify-center items-center gap-1.5 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2 rounded-xl transition-all text-xs sm:text-sm shadow-sm active:scale-[0.98]">
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            {% trans "Edit" %}
+                        </a>
+                        <form action="{% url 'delete_product' product.id %}" method="post" class="flex-1 m-0" onsubmit="return confirm('{% trans "Are you sure you want to delete this product?" %}');">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full flex justify-center items-center gap-1.5 bg-rose-50 border border-rose-100 hover:border-rose-200 hover:bg-rose-100 text-rose-600 font-semibold py-2 rounded-xl transition-all text-xs sm:text-sm shadow-sm active:scale-[0.98]">
+                                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                {% trans "Delete" %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Пустое состояние -->
+        <div class="text-center py-20 bg-white rounded-3xl shadow-sm border border-dashed border-gray-300 flex flex-col items-center">
+            <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">{% trans "You haven't added any products yet" %}</h2>
+            <p class="text-sm sm:text-base text-gray-500 mb-8 max-w-md mx-auto">{% trans "Start selling by adding your first product to the store and manage your inventory here." %}</p>
+            <a href="/add_product" class="group relative inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-orange-500 text-white font-bold py-3 px-8 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+                <svg class="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>{% trans "Add Product Now" %}</span>
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // 1. Логика для таймеров
+    function updateTimers() {
+        const timers = document.querySelectorAll('.countdown-timer');
+        const now = new Date().getTime();
+
+        timers.forEach(timer => {
+            const startAttr = timer.getAttribute('data-start');
+            if (!startAttr) return;
+
+            const startTime = new Date(startAttr).getTime();
+            const endTime = startTime + (48 * 60 * 60 * 1000);
+            const timeLeft = endTime - now;
+
+            if (timeLeft > 0) {
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                timer.innerText = hours + "h " + minutes + "m " + seconds + "s";
+            } else {
+                timer.innerText = "{% trans 'Hidden from catalog' %}";
+            }
+        });
+    }
+
+    // 2. Логика подсчета статистики для Дашборда сверху (Обновлено с поиском лидеров)
+    function calculateStatistics() {
+        const productCards = document.querySelectorAll('.product-card');
+        
+        // Общие цифры
+        let totalViews = 0;
+        let totalSold = 0;
+
+        // Для поиска лидеров
+        let maxViews = -1;
+        let topViewedTitle = '-';
+        let topViewedCount = 0;
+
+        let maxSold = -1;
+        let topSoldTitle = '-';
+        let topSoldCount = 0;
+
+        productCards.forEach(card => {
+            const views = parseInt(card.getAttribute('data-views') || 0, 10);
+            const sold = parseInt(card.getAttribute('data-sold') || 0, 10);
+            
+            // Достаем название товара из <h3> с классом product-title
+            const titleElem = card.querySelector('.product-title');
+            const title = titleElem ? titleElem.innerText : 'Товар';
+
+            totalViews += views;
+            totalSold += sold;
+
+            // Проверяем лидера по просмотрам
+            if (views > maxViews && views > 0) {
+                maxViews = views;
+                topViewedTitle = title;
+                topViewedCount = views;
+            }
+
+            // Проверяем лидера по продажам
+            if (sold > maxSold && sold > 0) {
+                maxSold = sold;
+                topSoldTitle = title;
+                topSoldCount = sold;
+            }
+        });
+
+        if (productCards.length > 0) {
+            // Заполняем общую статистику
+            document.getElementById('dash-views').innerText = totalViews.toLocaleString();
+            document.getElementById('dash-sold').innerText = totalSold.toLocaleString();
+
+            const conversionRate = totalViews > 0 ? ((totalSold / totalViews) * 100).toFixed(1) : 0;
+            document.getElementById('dash-cr').innerText = conversionRate + '%';
+
+            // Заполняем блок лидеров
+            if (maxViews > 0) {
+                document.getElementById('dash-top-viewed').innerText = topViewedTitle;
+                document.getElementById('dash-top-viewed-count').innerText = topViewedCount.toLocaleString();
+            } else {
+                document.getElementById('dash-top-viewed').innerText = '{% trans "No views yet" %}';
+                document.getElementById('dash-top-viewed-count').innerText = '0';
+            }
+
+            if (maxSold > 0) {
+                document.getElementById('dash-top-sold').innerText = topSoldTitle;
+                document.getElementById('dash-top-sold-count').innerText = topSoldCount.toLocaleString();
+            } else {
+                document.getElementById('dash-top-sold').innerText = '{% trans "No sales yet" %}';
+                document.getElementById('dash-top-sold-count').innerText = '0';
+            }
+        }
+    }
+
+    // Запускаем все скрипты после загрузки DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        updateTimers();
+        calculateStatistics();
+        setInterval(updateTimers, 1000);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+[Unit]
+Description=Erizon Django application
+After=network.target
+
+[Service]
+Type=exec
+User=erizon
+Group=erizon
+WorkingDirectory=/srv/erizon/app
+EnvironmentFile=/etc/erizon/erizon.env
+ExecStart=/srv/erizon/venv/bin/gunicorn --workers 1 --threads 4 --bind 127.0.0.1:8011 --access-logfile - --error-logfile - amazon.wsgi:application
+Restart=on-failure
+RestartSec=5
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

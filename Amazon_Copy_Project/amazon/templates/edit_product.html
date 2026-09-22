@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load l10n %}
+
+{% block title %}{% trans "Edit" %} {{ product.title }} - Erizon{% endblock %}
+
+{% block content %}
+<!-- Стили для скрытия стрелочек (spinners) в полях ввода чисел -->
+<style>
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+</style>
+
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+  <!-- Шапка страницы -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div>
+      <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">{% trans "Edit Product" %}</h1>
+      <p class="text-sm text-gray-500 mt-1">{{ product.title }}</p>
+    </div>
+    <a href="/my_products/" class="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-orange-500 transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      <span>{% trans "Back" %}</span>
+    </a>
+  </div>
+
+  <!-- Карточка формы -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Название (во всю ширину) -->
+        <div class="md:col-span-2">
+          <label for="title" class="block text-sm font-bold text-slate-800 mb-2">{% trans "Title" %}</label>
+          <input type="text" name="title" id="title" value="{{ product.title }}" required
+            class="w-full bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 transition-colors outline-none" />
+        </div>
+
+        <!-- Цена (половина ширины) -->
+        <div>
+          <label for="price" class="block text-sm font-bold text-slate-800 mb-2">{% trans "Price (€)" %}</label>
+          <div class="relative">
+            <input type="number" step="0.01" min="0" name="price" id="price" value="{{ product.price|unlocalize }}" required
+              class="number-field w-full bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 transition-colors outline-none" />
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">€</span>
+          </div>
+        </div>
+
+        <!-- Количество (половина ширины) -->
+        <div>
+          <label for="count" class="block text-sm font-bold text-slate-800 mb-2">{% trans "Count in Stock" %}</label>
+          <input type="number" step="1" min="0" name="count" id="count" value="{{ product.count }}" required
+            class="number-field w-full bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 transition-colors outline-none" />
+        </div>
+
+        <!-- Главная картинка (во всю ширину) -->
+        <div class="md:col-span-2">
+          <label for="product_image" class="block text-sm font-bold text-slate-800 mb-2">{% trans "Main image URL" %}</label>
+          <input type="url" name="product_image" id="product_image" value="{{ product.product_image }}"
+            class="w-full bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 transition-colors outline-none"
+            placeholder="https://..." />
+        </div>
+
+        <!-- Дополнительные картинки (во всю ширину) -->
+        <div class="md:col-span-2">
+          <label for="additional_images" class="block text-sm font-bold text-slate-800 mb-2">
+            {% trans "Additional images (max. 9, one per line)" %}
+          </label>
+          <textarea name="additional_images" id="additional_images" rows="3"
+            class="w-full bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 transition-colors outline-none resize-y"
+            placeholder="https://...&#10;https://...">{{ additional_images_urls }}</textarea>
+          <p class="text-xs text-gray-500 mt-1.5">{% trans "Each URL must be on a new line." %}</p>
+        </div>
+
+        <!-- Описание (во всю ширину) -->
+        <div class="md:col-span-2">
+          <label for="description" class="block text-sm font-bold text-slate-800 mb-2">{% trans "Description" %}</label>
+          <textarea name="description" id="description" rows="5" required
+            class="w-full bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 transition-colors outline-none resize-y"
+            placeholder="{% trans 'Detailed description of the product...' %}">{{ product.description }}</textarea>
+        </div>
+
+      </div>
+
+      <!-- Кнопка сохранения -->
+      <div class="pt-6 flex justify-end gap-3 border-t border-gray-100">
+        <a href="/my_products/"
+          class="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl transition-all duration-200">
+          {% trans "Cancel" %}
+        </a>
+        <button type="submit"
+          class="group relative inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-orange-500 text-white font-bold py-3 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+          <svg class="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          <span>{% trans "Save Changes" %}</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- Скрипт защиты от нечисловых знаков -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const numberInputs = document.querySelectorAll('.number-field');
+
+    numberInputs.forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        if (['e', 'E', '+', '-'].includes(e.key)) {
+          e.preventDefault();
+        }
+      });
+      input.addEventListener('paste', (e) => {
+        const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+        if (/[eE\+\-]/.test(pasteData)) {
+          e.preventDefault();
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

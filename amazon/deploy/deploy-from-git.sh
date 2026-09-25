@@ -14,6 +14,7 @@ APP_PORT="${APP_PORT:-8001}"
 GUNICORN_PORT="${GUNICORN_PORT:-8011}"
 CHECK_ONLY=false
 REF="${1:-origin/$BRANCH}"
+LOCK_FILE="${LOCK_FILE:-/run/erizon-deploy.lock}"
 
 if [ "${1:-}" = "--if-changed" ]; then
     CHECK_ONLY=true
@@ -149,6 +150,13 @@ healthcheck() {
 
 main() {
     require_root "$@"
+
+    exec 9>"$LOCK_FILE"
+    if ! flock -n 9; then
+        echo "Another Erizon deploy is already running"
+        exit 0
+    fi
+
     ensure_user_and_dirs
     ensure_env
     ensure_repo

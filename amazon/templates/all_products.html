@@ -1,350 +1,431 @@
 {% extends "base.html" %}
-{% block title %}All Products{% endblock %}
+{% load i18n %}
+
+{% block title %}{% trans "All Products" %}{% endblock %}
+{% block extra_head %}
+    <link rel="canonical" href="https://erikkytach.pythonanywhere.com" />
+{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold mb-8 text-gray-800 text-center">🛒 Latest Products</h1>
-  
-  <div class="flex flex-col lg:flex-row gap-8">
-    <!-- Filter Sidebar -->
-    <div class="lg:w-1/4">
-      <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
-        <h2 class="text-xl font-bold text-gray-800 mb-6">Filter</h2>
-        
-        <!-- Price Filter -->
-        <div class="mb-6 filter-block" data-section="price">
-          <div class="flex items-center justify-between mb-4 cursor-pointer filter-header" data-target="price-content">
-            <h3 class="text-lg font-semibold text-gray-700">Price</h3>
-            <svg class="w-5 h-5 text-gray-400 transition-transform chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-            </svg>
-          </div>
-          <div id="price-content" class="filter-content">
-          <form action="/filter_by_price/" method="post" id="priceForm">
-            {% csrf_token %}
-            <div class="flex items-center gap-2 mb-4">
-              <input type="number" name="min_price" value="{{ min_price }}" 
-                     class="w-20 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
-              <span class="text-gray-500">-</span>
-              <input type="number" name="max_price" value="{{ max_price }}" 
-                     class="w-20 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
-              
-            </div>
-            <!-- Slider entfernt -->
-          </form>
+<div class="container mx-auto px-2 sm:px-4 py-4 sm:py-8 max-w-[1600px]">
+  <!-- Заголовок страницы -->
+  <div class="flex flex-col items-center justify-center text-center mb-4 sm:mb-8">
+    <h1 class="text-2xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-0.5 sm:mb-2">
+      {% trans "Products on Erizon" %}
+    </h1>
+    <p class="text-xs sm:text-base text-gray-500">
+      {% trans "Find exactly what you need." %}
+    </p>
+  </div>
+
+  <!-- Мобильная панель фильтрации -->
+  <div class="md:hidden mb-4">
+    <button id="open-filter-btn" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 shadow-sm py-2.5 px-4 rounded-xl text-gray-800 text-sm font-semibold hover:bg-gray-50 active:scale-[0.98] transition-all focus:outline-none" style="-webkit-tap-highlight-color: transparent;">
+      <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+      {% trans "Show Filters" %}
+    </button>
+  </div>
+
+  <div class="flex flex-col md:flex-row gap-8 relative items-start">
+
+    <!-- Sidebar Filters -->
+    <div id="mobile-filter-overlay" class="hidden md:block fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:sticky md:top-24 md:max-h-[calc(100vh-9rem)] md:overflow-y-auto custom-scrollbar md:w-[280px] md:shrink-0 md:z-auto md:bg-transparent md:backdrop-blur-none transition-opacity pb-8">
+
+      <div class="absolute left-0 top-0 bottom-0 w-[85%] max-w-sm h-full bg-white p-6 overflow-y-auto custom-scrollbar md:relative md:w-full md:max-w-none md:h-auto md:bg-transparent md:p-0 md:overflow-visible shadow-2xl md:shadow-none rounded-r-2xl md:rounded-none">
+
+        <!-- Шапка фильтров для мобилок -->
+        <div class="flex justify-between items-center mb-8 md:mb-6">
+          <h2 class="text-2xl md:text-xl font-bold text-gray-900">{% trans "Filters" %}</h2>
+          <div class="flex items-center gap-4">
+            <a href="/all_products/" class="text-sm font-semibold text-orange-500 hover:text-orange-600 transition filter-reset-link">{% trans "Clear all" %}</a>
+            <button id="close-filter-btn" type="button" class="md:hidden text-gray-400 hover:text-gray-800 bg-gray-100 p-2 rounded-full transition-colors focus:outline-none" style="-webkit-tap-highlight-color: transparent;">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
           </div>
         </div>
 
-        <!-- Brand Filter -->
-        <div class="mb-6 filter-block" data-section="brand">
-          <div class="flex items-center justify-between mb-4 cursor-pointer filter-header" data-target="brand-content">
-            <h3 class="text-lg font-semibold text-gray-700">Brand</h3>
-            <svg class="w-5 h-5 text-gray-400 transition-transform chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-            </svg>
-          </div>
-          <div id="brand-content" class="filter-content">
-          <form action="/filter_by_manufacturer/" method="post" id="brandForm">
-            {% csrf_token %}
-            <div class="space-y-3">
-              {% for item in manufacturers %}
-                <label class="flex items-center cursor-pointer">
-                  <input type="checkbox" name="manufacturer_ids" value="{{ item.manufacturer.id }}" 
-                         class="brand-checkbox w-4 h-4 text-orange-500 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
-                         data-manufacturer-id="{{ item.manufacturer.id }}">
-                  <span class="ml-3 text-sm text-gray-700">
-                    {{ item.manufacturer.name }} ({{ item.count }})
-                  </span>
-                </label>
-              {% endfor %}
-            </div>
-            <button type="button" class="mt-4 text-blue-600 text-sm underline hover:text-blue-800" onclick="showAllBrands()">
-              Show all
-              <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-          </form>
-          </div>
-        </div>
+        <form action="/all_products/" method="GET" id="mainFilterForm" class="md:bg-white md:border md:border-gray-200 md:rounded-2xl md:p-6 md:pb-6 md:shadow-sm">
+          <input type="hidden" name="searching_name" value="{{ searching_name|default:'' }}">
 
-        <!-- Series Filter -->
-        <div class="mb-6 filter-block" data-section="series">
-          <div class="flex items-center justify-between mb-4 cursor-pointer filter-header" data-target="series-content">
-            <h3 class="text-lg font-semibold text-gray-700">Series</h3>
-            <svg class="w-5 h-5 text-gray-400 transition-transform chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-            </svg>
-          </div>
-          <div id="series-content" class="filter-content">
-          <form action="/filter_by_series/" method="post" id="seriesForm">
-            {% csrf_token %}
-            <div class="space-y-3">
-              {% for item in series %}
-                <label class="flex items-center cursor-pointer">
-                  <input type="checkbox" name="series_names" value="{{ item.name }}" 
-                         class="series-checkbox w-4 h-4 text-orange-500 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
-                         data-series-name="{{ item.name }}">
-                  <span class="ml-3 text-sm text-gray-700">
-                    {{ item.name }} ({{ item.count }})
-                  </span>
-                </label>
-              {% endfor %}
+          <!-- Блок Сортировки -->
+          <div class="mb-6 filter-block" data-section="sorting">
+            <div class="flex items-center justify-between mb-3 cursor-pointer filter-header select-none" style="-webkit-tap-highlight-color: transparent;">
+              <h3 class="text-base font-bold text-gray-800">{% trans "Sort By" %}</h3>
+              <svg class="w-5 h-5 text-gray-400 transition-transform chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
-            <button type="button" class="mt-4 text-blue-600 text-sm underline hover:text-blue-800" onclick="showAllSeries()">
-              Show all
-              <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-          </form>
+            <div class="filter-content">
+              <div class="space-y-1.5">
+                <label class="flex items-center cursor-pointer group p-2 rounded-xl transition-colors {% if selected_sort == 'by_new' or not selected_sort %}bg-orange-50/80 border border-orange-200/60{% else %}hover:bg-gray-50{% endif %}">
+                  <input type="radio" name="sort_by" value="by_new" class="filter-input w-4 h-4 text-orange-500 bg-gray-50 border-gray-300 focus:ring-orange-500 focus:ring-2 cursor-pointer" {% if selected_sort == 'by_new' or not selected_sort %}checked{% endif %}>
+                  <span class="ml-2.5 text-sm font-medium text-gray-700 group-hover:text-gray-900">{% trans "Newest" %}</span>
+                </label>
+                <label class="flex items-center cursor-pointer group p-2 rounded-xl transition-colors {% if selected_sort == 'most_viewed' %}bg-orange-50/80 border border-orange-200/60{% else %}hover:bg-gray-50{% endif %}">
+                  <input type="radio" name="sort_by" value="most_viewed" class="filter-input w-4 h-4 text-orange-500 bg-gray-50 border-gray-300 focus:ring-orange-500 focus:ring-2 cursor-pointer" {% if selected_sort == 'most_viewed' %}checked{% endif %}>
+                  <span class="ml-2.5 text-sm font-medium text-gray-700 group-hover:text-gray-900">{% trans "Most Viewed" %}</span>
+                </label>
+                <label class="flex items-center cursor-pointer group p-2 rounded-xl transition-colors {% if selected_sort == 'most_sold' %}bg-orange-50/80 border border-orange-200/60{% else %}hover:bg-gray-50{% endif %}">
+                  <input type="radio" name="sort_by" value="most_sold" class="filter-input w-4 h-4 text-orange-500 bg-gray-50 border-gray-300 focus:ring-orange-500 focus:ring-2 cursor-pointer" {% if selected_sort == 'most_sold' %}checked{% endif %}>
+                  <span class="ml-2.5 text-sm font-medium text-gray-700 group-hover:text-gray-900">{% trans "Best Sellers" %}</span>
+                </label>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Processor Filter -->
-        <div class="mb-6 filter-block" data-section="processor">
-          <div class="flex items-center justify-between mb-4 cursor-pointer filter-header" data-target="processor-content">
-            <h3 class="text-lg font-semibold text-gray-700">Processor</h3>
-            <svg class="w-5 h-5 text-gray-400 transition-transform chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-            </svg>
-          </div>
-          <div id="processor-content" class="filter-content">
-          <form action="/filter_by_processor/" method="post" id="processorForm">
-            {% csrf_token %}
-            <div class="space-y-3">
-              {% for item in processors %}
-                <label class="flex items-center cursor-pointer">
-                  <input type="checkbox" name="processor_names" value="{{ item.name }}" 
-                         class="processor-checkbox w-4 h-4 text-orange-500 bg-gray-100 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
-                         data-processor-name="{{ item.name }}">
-                  <span class="ml-3 text-sm text-gray-700">
-                    {{ item.name }} ({{ item.count }})
-                  </span>
-                </label>
-              {% endfor %}
+          <hr class="border-gray-100 my-5">
+
+          <!-- Price Filter -->
+          <div class="mb-6 filter-block" data-section="price">
+            <div class="flex items-center justify-between mb-4 cursor-pointer filter-header select-none" style="-webkit-tap-highlight-color: transparent;">
+              <h3 class="text-base font-bold text-gray-800">{% trans "Price Range" %}</h3>
+              <svg class="w-5 h-5 text-gray-400 transition-transform chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
-            <button type="button" class="mt-4 text-blue-600 text-sm underline hover:text-blue-800" onclick="showAllProcessors()">
-              Show all
-              <svg class="w-4 h-4 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-          </form>
+            <div class="filter-content">
+              <div class="flex items-center gap-3 mb-2">
+                <div class="relative flex-1">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">€</span>
+                  <input type="number" name="min_price" value="{{ min_price }}" placeholder="{% trans 'Min' %}" step="0.01" min="0" class="w-full pl-7 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none">
+                </div>
+                <span class="text-gray-400">-</span>
+                <div class="relative flex-1">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">€</span>
+                  <input type="number" name="max_price" value="{{ max_price }}" placeholder="{% trans 'Max' %}" step="0.01" min="0" class="w-full pl-7 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all outline-none">
+                </div>
+              </div>
+              <button type="submit" class="w-full mt-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-orange-500 transition-colors">{% trans "Apply Price" %}</button>
+            </div>
           </div>
-        </div>
+
+          <hr class="border-gray-100 my-5">
+
+          <!-- Brand Filter -->
+          <div class="mb-6 filter-block" data-section="brand">
+            <div class="flex items-center justify-between mb-4 cursor-pointer filter-header select-none" style="-webkit-tap-highlight-color: transparent;">
+              <h3 class="text-base font-bold text-gray-800">{% trans "Brands" %}</h3>
+              <svg class="w-5 h-5 text-gray-400 transition-transform chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div class="filter-content">
+              <div class="max-h-48 overflow-y-auto pr-2 pb-1 custom-scrollbar">
+                <div class="space-y-3">
+                  {% for manufacturer in manufacturers %}
+                    <label class="flex items-start cursor-pointer group">
+                      <div class="relative flex items-center shrink-0 mt-0.5">
+                        <input type="checkbox" name="manufacturer_ids" value="{{ manufacturer.id }}" class="filter-input filter-checkbox peer w-5 h-5 text-orange-500 bg-gray-50 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 transition-all cursor-pointer" {% if manufacturer.id|stringformat:"s" in selected_manufacturers %}checked{% endif %}>
+                      </div>
+                      <span class="ml-3 text-sm text-gray-600 peer-checked:text-gray-900 peer-checked:font-medium group-hover:text-gray-900 transition-colors">{{ manufacturer.name }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-gray-100 my-5">
+
+          <!-- Categories Filter -->
+          <div class="mb-2 filter-block" data-section="category">
+            <div class="flex items-center justify-between mb-4 cursor-pointer filter-header select-none" style="-webkit-tap-highlight-color: transparent;">
+              <h3 class="text-base font-bold text-gray-800">{% trans "Categories" %}</h3>
+              <svg class="w-5 h-5 text-gray-400 transition-transform chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+            <div class="filter-content">
+              <div class="max-h-48 overflow-y-auto pr-2 pb-1 custom-scrollbar">
+                <div class="space-y-3">
+                  {% for category in categories %}
+                    <label class="flex items-start cursor-pointer group">
+                      <input type="checkbox" name="category_names" value="{{ category.name }}" class="filter-input filter-checkbox peer shrink-0 mt-0.5 w-5 h-5 text-orange-500 bg-gray-50 border-gray-300 rounded focus:ring-orange-500 focus:ring-2 transition-all cursor-pointer" {% if category.name in selected_categories %}checked{% endif %}>
+                      <span class="ml-3 text-sm text-gray-600 peer-checked:text-gray-900 peer-checked:font-medium group-hover:text-gray-900 transition-colors">{{ category.translated_name }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
 
-    <!-- Products Grid -->
-    <div class="lg:w-3/4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Products Grid Container -->
+    <div class="w-full flex-1 min-w-0 relative min-h-[300px]">
+
+      <!-- Оверлей индикатора загрузки фильтров/сортировки -->
+      <div id="products-loading-overlay" class="hidden absolute inset-0 bg-white/70 backdrop-blur-[1px] z-20 flex items-start justify-center pt-24 rounded-2xl transition-all duration-200">
+        <div class="flex items-center gap-3 px-6 py-3.5 bg-white border border-gray-200/80 shadow-xl rounded-2xl">
+          <svg class="w-5 h-5 animate-spin text-orange-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-sm font-bold text-gray-800">{% trans "Loading..." %}</span>
+        </div>
+      </div>
+
+      <div id="products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-2.5 sm:gap-6 transition-opacity duration-200">
         {% for i in products %}
-          <a href="/info_product/{{ i.id }}" class="bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 block overflow-hidden">
-            <img src="{{ i.product_image }}" alt="{{ i.title }}" class="w-full h-52 object-cover" />
-            <div class="p-4">
-              <h2 class="text-lg font-semibold text-gray-900 mb-1">{{ i.title }}</h2>
-              <p class="text-green-600 font-bold text-md mb-1">{{ i.price }} €</p>
-              <p class="text-sm text-gray-500">Manufacturer: {{ i.manufacturer_id.name }}</p>
+          <a href="/info_product/{{ i.id }}" class="group bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-gray-200 transition-all duration-300 flex flex-col overflow-hidden h-full product-card">
+
+            <!-- Картинка товара -->
+            <div class="w-full aspect-square bg-white flex items-center justify-center p-3 sm:p-6 relative overflow-hidden">
+              <img src="{{ i.product_image }}" alt="{{ i.title }}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ease-out" />
+            </div>
+
+            <!-- Контент карточки -->
+            <div class="p-3 sm:p-5 flex flex-col flex-grow bg-gray-50/50 border-t border-gray-50">
+              <p class="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1 line-clamp-1">{{ i.manufacturer_id.name }}</p>
+
+              <h2 class="text-xs sm:text-base font-semibold text-gray-800 mb-2 line-clamp-2 flex-grow group-hover:text-orange-500 transition-colors" title="{{ i.title }}">
+                {{ i.title }}
+              </h2>
+
+              <!-- Индикатор наличия (Stock Badge) -->
+              <div class="mb-3">
+                {% if i.count > 5 %}
+                  <span class="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    {{ i.count }} {% trans "in stock" %}
+                  </span>
+                {% elif i.count > 0 %}
+                  <span class="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    {% trans "Only" %} {{ i.count }} {% trans "left" %}
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                    {% trans "Out of stock" %}
+                  </span>
+                {% endif %}
+              </div>
+
+              <div class="flex items-center justify-between mt-auto pt-1">
+                <p class="text-sm sm:text-xl font-extrabold text-gray-900">{{ i.price }} €</p>
+                <div class="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white border border-gray-200 items-center justify-center text-gray-600 group-hover:bg-orange-500 group-hover:border-orange-500 group-hover:text-white transition-all">
+                  <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </div>
+              </div>
             </div>
           </a>
         {% empty %}
-          <div class="col-span-full text-center text-gray-500 py-12">
-            <p class="text-xl">No products found.</p>
+          <div class="col-span-full flex flex-col items-center justify-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+            <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+            <p class="text-xl font-medium text-gray-500">{% trans "No products found." %}</p>
+            <a href="/all_products/" class="mt-4 text-orange-500 font-semibold hover:underline filter-reset-link">{% trans "Clear Filters" %}</a>
           </div>
         {% endfor %}
       </div>
+
+      <!-- Кнопка Load More -->
+      {% if products.has_next %}
+      <div id="load-more-container" class="w-full flex justify-center mt-8 sm:mt-12 mb-6">
+        <button id="load-more-btn" data-page="{{ products.next_page_number }}" class="group relative flex items-center justify-center gap-3 px-6 sm:px-8 py-3 bg-gray-900 text-white rounded-xl text-xs sm:text-sm font-bold tracking-wide hover:bg-orange-500 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+          <span id="load-more-text">{% trans "Load More" %}</span>
+          <svg id="load-more-spinner" class="w-4 h-4 sm:w-5 sm:h-5 hidden animate-spin text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+      </div>
+      {% endif %}
+
     </div>
   </div>
 
+  <!-- Recently Viewed -->
   {% if recently_viewed_products %}
-  <div class="bg-white rounded-lg shadow-md p-6 mt-8">
-    <h2 class="text-xl font-bold text-gray-800 mb-4">Recently viewed</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div class="mt-12 sm:mt-20 pt-8 sm:pt-10 border-t border-gray-200">
+    <div class="flex items-center gap-3 mb-4 sm:mb-6">
+      <div class="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      </div>
+      <h2 class="text-lg sm:text-2xl font-extrabold text-gray-900">{% trans "Recently Viewed" %}</h2>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-4">
       {% for p in recently_viewed_products %}
-      <a href="/info_product/{{ p.id }}" class="block bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
-        <img src="{{ p.product_image }}" alt="{{ p.title }}" class="w-full h-40 object-cover" />
-        <div class="p-4">
-          <h3 class="text-sm font-semibold text-gray-900 line-clamp-2">{{ p.title }}</h3>
-          <p class="text-green-600 font-bold text-sm mt-1">{{ p.price }} €</p>
-        </div>
-      </a>
+        <a href="/info_product/{{ p.id }}" class="group block bg-gray-50 rounded-xl border border-gray-200/75 hover:bg-white hover:shadow-lg hover:border-gray-300 transition-all duration-300 overflow-hidden h-full flex flex-col">
+          <div class="w-full aspect-[4/3] bg-white p-2 sm:p-3 mix-blend-multiply flex items-center justify-center relative">
+            <img src="{{ p.product_image }}" alt="{{ p.title }}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" />
+          </div>
+          <div class="p-2 sm:p-3 border-t border-gray-100 flex flex-col flex-grow">
+            <h3 class="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-orange-500 transition-colors line-clamp-2 mb-1.5 flex-grow" title="{{ p.title }}">{{ p.title }}</h3>
+            <p class="text-gray-900 font-bold text-xs sm:text-base">{{ p.price }} €</p>
+          </div>
+        </a>
       {% endfor %}
     </div>
   </div>
   {% endif %}
-
 </div>
 
-<style>
-/* Slider-Styles entfernt */
-.filter-content { display: block; }
-.filter-block.collapsed .filter-content { display: none; }
-.filter-block.collapsed .chevron-icon { transform: rotate(180deg); }
-</style>
-
 <script>
-// LocalStorage-Funktionen
-function saveFilterState() {
-    const filterState = {
-        brands: Array.from(document.querySelectorAll('.brand-checkbox:checked')).map(cb => cb.value),
-        series: Array.from(document.querySelectorAll('.series-checkbox:checked')).map(cb => cb.value),
-        processors: Array.from(document.querySelectorAll('.processor-checkbox:checked')).map(cb => cb.value),
-        minPrice: document.querySelector('input[name="min_price"]').value,
-        maxPrice: document.querySelector('input[name="max_price"]').value
-    };
-    localStorage.setItem('filterState', JSON.stringify(filterState));
+function getOptimalPerPage() {
+    const width = window.innerWidth;
+    if (width >= 1536) return 40; // 2xl: 5 колонок в ряд
+    if (width >= 1024) return 32; // lg: 4 колонки в ряд
+    if (width >= 768) return 24;  // md: 3 колонки в ряд
+    return 16;                    // mobile: 2 колонки в ряд
 }
 
-function loadFilterState() {
-    const savedState = localStorage.getItem('filterState');
-    if (savedState) {
-        const filterState = JSON.parse(savedState);
-        
-        // Brand checkboxes wiederherstellen
-        filterState.brands.forEach(brandId => {
-            const checkbox = document.querySelector(`input[value="${brandId}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-        
-        // Series checkboxes wiederherstellen
-        filterState.series.forEach(seriesName => {
-            const checkbox = document.querySelector(`input[value="${seriesName}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-        
-        // Processor checkboxes wiederherstellen
-        filterState.processors.forEach(processorName => {
-            const checkbox = document.querySelector(`input[value="${processorName}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-        
-        // Preis wiederherstellen
-        if (filterState.minPrice) {
-            document.querySelector('input[name="min_price"]').value = filterState.minPrice;
-        }
-        if (filterState.maxPrice) {
-            document.querySelector('input[name="max_price"]').value = filterState.maxPrice;
-        }
+// Включение визуального оверлея загрузки рядом с продуктами
+function showFilterLoading() {
+    const overlay = document.getElementById('products-loading-overlay');
+    const container = document.getElementById('products-container');
+    if (overlay && overlay.classList.contains('hidden')) {
+        overlay.classList.remove('hidden');
+        if (container) container.classList.add('opacity-40', 'pointer-events-none');
     }
 }
 
-// Automatische Filterung bei Checkbox-Änderung
-function setupAutoFilter() {
-    // Brand checkboxes
-    document.querySelectorAll('.brand-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            saveFilterState();
-            submitBrandFilter();
-        });
-    });
-    
-    // Series checkboxes
-    document.querySelectorAll('.series-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            saveFilterState();
-            submitSeriesFilter();
-        });
-    });
-    
-    // Processor checkboxes
-    document.querySelectorAll('.processor-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            saveFilterState();
-            submitProcessorFilter();
-        });
-    });
-    
-    // Preis-Änderungen
-    document.querySelectorAll('input[name="min_price"], input[name="max_price"]').forEach(input => {
-        input.addEventListener('change', function() {
-            saveFilterState();
-            submitPriceFilter();
-        });
-    });
-}
-
-// Form-Submission-Funktionen
-function submitBrandFilter() {
-    const form = document.getElementById('brandForm');
-    const checkedBoxes = Array.from(document.querySelectorAll('.brand-checkbox:checked'));
-    
-    if (checkedBoxes.length > 0) {
-        form.submit();
-    } else {
-        // Wenn keine Checkboxen ausgewählt sind, alle Produkte anzeigen
-        window.location.href = '/all_products/';
-    }
-}
-
-function submitSeriesFilter() {
-    const form = document.getElementById('seriesForm');
-    const checkedBoxes = Array.from(document.querySelectorAll('.series-checkbox:checked'));
-    
-    if (checkedBoxes.length > 0) {
-        form.submit();
-    } else {
-        window.location.href = '/all_products/';
-    }
-}
-
-function submitProcessorFilter() {
-    const form = document.getElementById('processorForm');
-    const checkedBoxes = Array.from(document.querySelectorAll('.processor-checkbox:checked'));
-    
-    if (checkedBoxes.length > 0) {
-        form.submit();
-    } else {
-        window.location.href = '/all_products/';
-    }
-}
-
-function submitPriceFilter() {
-    const form = document.getElementById('priceForm');
-    form.submit();
-}
-
-// "Show All" Funktionen
-function showAllBrands() {
-    document.querySelectorAll('.brand-checkbox').forEach(cb => cb.checked = false);
-    saveFilterState();
-    window.location.href = '/all_products/';
-}
-
-function showAllSeries() {
-    document.querySelectorAll('.series-checkbox').forEach(cb => cb.checked = false);
-    saveFilterState();
-    window.location.href = '/all_products/';
-}
-
-function showAllProcessors() {
-    document.querySelectorAll('.processor-checkbox').forEach(cb => cb.checked = false);
-    saveFilterState();
-    window.location.href = '/all_products/';
-}
-
-// Initialisierung beim Laden der Seite
 document.addEventListener('DOMContentLoaded', function() {
-    loadFilterState();
-    setupAutoFilter();
+    const form = document.getElementById('mainFilterForm');
+
+    if (form) {
+        let isSubmitted = false;
+
+        // Единый перехват отправки формы (и для кнопки Apply, и для авто-сабмита)
+        form.addEventListener('submit', function(e) {
+            // Останавливаем всплытие события, чтобы глобальный лоадер из base.html
+            // не перехватил эту отправку формы
+            e.stopPropagation();
+
+            if (isSubmitted) {
+                e.preventDefault();
+                return;
+            }
+            isSubmitted = true;
+            showFilterLoading();
+        });
+
+        // Автоматическая отправка при клике на чекбоксы/радиокнопки
+        const filterInputs = form.querySelectorAll('.filter-input');
+        filterInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (isSubmitted) return;
+
+                let perPageInput = form.querySelector('input[name="per_page"]');
+                if (!perPageInput) {
+                    perPageInput = document.createElement('input');
+                    perPageInput.type = 'hidden';
+                    perPageInput.name = 'per_page';
+                    form.appendChild(perPageInput);
+                }
+                perPageInput.value = getOptimalPerPage();
+
+                // ВАЖНО: используем requestSubmit(), а не submit().
+                // Он корректно вызывает событие 'submit', запуская нашу локальную анимацию
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else {
+                    // Фолбэк для очень старых браузеров
+                    showFilterLoading();
+                    form.submit();
+                }
+            });
+        });
+    }
+
+    // Перехват кликов по ссылкам сброса фильтров
+    const resetLinks = document.querySelectorAll('.filter-reset-link');
+    resetLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Также блокируем глобальный лоадер при клике на сброс фильтров
+            e.stopPropagation();
+            showFilterLoading();
+        });
+    });
+
     setupCollapsibles();
+
+    // Логика мобильного меню
+    const filterOverlay = document.getElementById('mobile-filter-overlay');
+    const openFilterBtn = document.getElementById('open-filter-btn');
+    const closeFilterBtn = document.getElementById('close-filter-btn');
+
+    if (openFilterBtn && closeFilterBtn && filterOverlay) {
+        openFilterBtn.addEventListener('click', () => {
+            filterOverlay.classList.remove('hidden');
+            setTimeout(() => { filterOverlay.classList.remove('opacity-0'); }, 10);
+            document.body.style.overflow = 'hidden';
+        });
+
+        const closeMenu = () => {
+            filterOverlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        };
+
+        closeFilterBtn.addEventListener('click', closeMenu);
+        filterOverlay.addEventListener('click', (e) => {
+            if (e.target === filterOverlay) closeMenu();
+        });
+    }
+
+    // Логика Load More
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const loadMoreContainer = document.getElementById('load-more-container');
+    const productsContainer = document.getElementById('products-container');
+    const spinner = document.getElementById('load-more-spinner');
+    const btnText = document.getElementById('load-more-text');
+
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', async function() {
+            const perPage = getOptimalPerPage();
+            const nextPage = this.getAttribute('data-page');
+
+            spinner.classList.remove('hidden');
+            btnText.textContent = 'Loading...';
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.classList.add('cursor-not-allowed', 'opacity-90');
+
+            const url = new URL(window.location.href);
+            url.searchParams.set('page', nextPage);
+            url.searchParams.set('per_page', perPage);
+
+            try {
+                const response = await fetch(url.toString(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                if (!response.ok) throw new Error('Network error');
+
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const newProducts = doc.querySelectorAll('#products-container > .product-card');
+                newProducts.forEach(prod => productsContainer.appendChild(prod));
+
+                const newLoadMoreBtn = doc.getElementById('load-more-btn');
+                if (newLoadMoreBtn) {
+                    loadMoreBtn.setAttribute('data-page', newLoadMoreBtn.getAttribute('data-page'));
+                } else {
+                    loadMoreContainer.remove();
+                }
+            } catch (error) {
+                console.error('Error fetching more products:', error);
+                alert('Could not load more products. Please try again.');
+            } finally {
+                if (document.body.contains(loadMoreBtn)) {
+                    spinner.classList.add('hidden');
+                    btnText.textContent = 'Load More';
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.classList.remove('cursor-not-allowed', 'opacity-90');
+                }
+            }
+        });
+    }
 });
 
-// Ein-/Ausklappen der Sektionen + Zustand speichern
 function setupCollapsibles() {
     const saved = JSON.parse(localStorage.getItem('filterCollapsed') || '{}');
 
     document.querySelectorAll('.filter-block').forEach(block => {
         const sectionKey = block.getAttribute('data-section');
-        if (saved[sectionKey]) {
-            block.classList.add('collapsed');
-        }
+        if (saved[sectionKey]) block.classList.add('collapsed');
     });
 
     document.querySelectorAll('.filter-header').forEach(header => {
         header.addEventListener('click', () => {
             const targetBlock = header.closest('.filter-block');
             const sectionKey = targetBlock.getAttribute('data-section');
+
             targetBlock.classList.toggle('collapsed');
 
             const current = JSON.parse(localStorage.getItem('filterCollapsed') || '{}');

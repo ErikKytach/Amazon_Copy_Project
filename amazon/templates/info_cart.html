@@ -1,72 +1,188 @@
 {% extends "base.html" %}
-{% block title %}Cart{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Cart" %}{% endblock %}
+
 {% block content %}
-  <h1 class="text-3xl font-bold mb-6 text-gray-800 text-center">🛍️ Your Cart</h1>
+<div class="max-w-4xl mx-auto px-4 py-8">
 
-  <div class="max-w-4xl mx-auto">
-    {% for i in cartitems %}
-      <div class="bg-white rounded-xl shadow p-5 mb-4">
-        <div class="flex items-start gap-4">
-          <img src="{{ i.0.product.product_image }}" alt="Product Image" class="w-24 h-24 object-cover rounded" />
-          <div class="flex-1">
-            <div class="text-lg font-semibold text-gray-900">{{ i.0.product.title }}</div>
-            <div class="text-sm text-gray-600">{{ i.0.product.price }}€ × {{ i.0.count }} = <strong>{{ i.1 }}€</strong></div>
+  <!-- Заголовок страницы -->
+  <div class="mb-8 flex flex-col items-center justify-center text-center">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
+      🛍️ {% trans "Your Cart" %}
+    </h1>
+    <p class="text-sm text-gray-500">{% trans "Review your items and proceed to checkout" %}</p>
+  </div>
 
-            <div class="mt-3 flex items-center gap-2">
-              <form action="/one_more/{{ i.0.id }}/" method="post">
-                {% csrf_token %}
-                <input type="submit" value="+" class="px-3 py-1 rounded bg-blue-600 text-white cursor-pointer hover:bg-blue-700" />
-              </form>
-              <form action="/one_less/{{ i.0.id }}/" method="post">
-                {% csrf_token %}
-                <input type="submit" value="-" class="px-3 py-1 rounded bg-gray-200 text-gray-800 cursor-pointer hover:bg-gray-300" />
-              </form>
+  <!-- Список товаров в корзине -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+    <ul class="divide-y divide-gray-100">
+      {% for i in cartitems %}
+        <li class="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 hover:bg-gray-50/50 transition-colors">
+
+          <!-- Картинка товара -->
+          <div class="w-24 h-24 sm:w-28 sm:h-28 bg-white border border-gray-100 rounded-xl p-2 shrink-0 flex items-center justify-center">
+            <img src="{{ i.0.product.product_image }}" alt="Product Image" class="max-w-full max-h-full object-contain" />
+          </div>
+
+          <!-- Информация о товаре -->
+          <div class="flex-1 flex flex-col">
+            <a href="/info_product/{{ i.0.product.id }}" class="text-base sm:text-lg font-bold text-gray-900 hover:text-orange-500 transition-colors line-clamp-2 mb-1">
+              {{ i.0.product.title }}
+            </a>
+            <div class="text-sm text-gray-500 font-medium mb-3 sm:mb-4">
+              {{ i.0.product.price }} € {% trans "per item" %}
+            </div>
+
+            <!-- Блок управления количеством -->
+            <div class="flex items-center gap-3">
+              <div class="inline-flex items-center border border-gray-200 rounded-lg bg-white shadow-sm h-9">
+
+                <!-- Кнопка Минус / Корзина -->
+                <form action="{% url 'one_less' i.0.id %}" method="post" class="m-0 h-full flex no-loader">
+                  {% csrf_token %}
+                  <button type="submit" class="w-9 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-red-500 rounded-l-lg transition-colors focus:outline-none" title="{% trans 'Reduce or remove' %}">
+                    {% if i.0.count == 1 %}
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    {% else %}
+                      <span class="text-lg font-bold leading-none">−</span>
+                    {% endif %}
+                  </button>
+                </form>
+
+                <!-- Количество -->
+                <span class="w-10 h-full flex items-center justify-center text-sm font-bold text-gray-900 border-x border-gray-200">
+                  {{ i.0.count }}
+                </span>
+
+                <!-- Кнопка Плюс -->
+                {% if i.0.count < i.0.product.count %}
+                  <form action="{% url 'one_more' i.0.id %}" method="post" class="m-0 h-full flex no-loader">
+                    {% csrf_token %}
+                    <button type="submit" class="w-9 h-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-orange-500 rounded-r-lg transition-colors focus:outline-none">
+                      <span class="text-lg font-bold leading-none">+</span>
+                    </button>
+                  </form>
+                {% else %}
+                  <button disabled class="w-9 h-full flex items-center justify-center text-gray-300 bg-gray-50 cursor-not-allowed rounded-r-lg">
+                    <span class="text-lg font-bold leading-none">+</span>
+                  </button>
+                {% endif %}
+              </div>
+
+              <!-- Сообщение о лимите -->
+              {% if i.0.count >= i.0.product.count %}
+                <span class="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-md border border-orange-100">{% trans "Limit reached" %}</span>
+              {% endif %}
             </div>
           </div>
-        </div>
-      </div>
-    {% empty %}
-      <p class="text-center text-gray-500">Your cart is empty.</p>
-    {% endfor %}
 
-    <div class="mt-6 bg-white rounded-xl shadow p-5 flex items-center justify-between">
-      <p class="text-xl font-semibold text-gray-800">Total: {{ mainprice }}€</p>
-      <div class="flex items-center gap-3">
-        <form action="/clear_cart/" method="post">
+          <!-- Итог по одной позиции -->
+          <div class="mt-4 sm:mt-0 sm:ml-auto text-left sm:text-right flex flex-col justify-center">
+            <p class="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 hidden sm:block">{% trans "Total" %}</p>
+            <p class="text-xl sm:text-2xl font-extrabold text-gray-900">{{ i.1 }} €</p>
+          </div>
+
+        </li>
+      {% empty %}
+        <!-- Если корзина пуста -->
+        <li class="flex flex-col items-center justify-center py-16 sm:py-24 bg-gray-50/50">
+          <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+          <p class="text-xl font-medium text-gray-500">{% trans "Your cart is empty." %}</p>
+          <a href="/all_products/" class="mt-4 inline-flex items-center gap-2 text-orange-500 font-semibold hover:text-orange-600 transition-colors hover:underline">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            {% trans "Continue Shopping" %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Панель управления и итоговая сумма -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+    <div class="text-center md:text-left w-full md:w-auto">
+      <p class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-1">{% trans "Subtotal" %}</p>
+      <p class="text-3xl font-extrabold text-slate-900">{{ mainprice }} €</p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+      {% if cartitems %}
+        <form action="{% url 'clear_cart' %}" method="post" class="m-0 w-full sm:w-auto">
           {% csrf_token %}
-          <input type="submit" value="Clear cart" class="px-4 py-2 rounded bg-gray-100 text-gray-800 cursor-pointer hover:bg-gray-200" />
+          <button type="submit" class="w-full sm:w-auto px-6 py-3 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold hover:bg-gray-50 hover:text-red-500 transition-all focus:outline-none focus:ring-2 focus:ring-gray-200">
+            {% trans "Clear cart" %}
+          </button>
         </form>
-        <button type="button" onclick="document.getElementById('payment-modal').classList.remove('hidden')" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-5 rounded-lg shadow transition">Buy now</button>
-      </div>
+        <button type="button" onclick="document.getElementById('payment-modal').classList.remove('hidden')" class="w-full sm:w-auto group relative inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-orange-500 text-white font-bold py-3 px-8 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+          <span>{% trans "Buy now" %}</span>
+          <svg class="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+        </button>
+      {% else %}
+        <button type="button" disabled class="w-full sm:w-auto px-6 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-400 font-bold cursor-not-allowed">
+          {% trans "Clear cart" %}
+        </button>
+        <button type="button" disabled class="w-full sm:w-auto inline-flex items-center justify-center bg-gray-200 text-gray-400 font-bold py-3 px-8 rounded-xl cursor-not-allowed">
+          {% trans "Buy now" %}
+        </button>
+      {% endif %}
     </div>
   </div>
 
-  <!-- Payment Modal -->
-  <div id="payment-modal" class="fixed inset-0 hidden flex items-center justify-center bg-black/40 z-50">
-    <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative">
-      <button onclick="document.getElementById('payment-modal').classList.add('hidden')" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
-      <h2 class="text-xl font-bold mb-4">Choose payment method</h2>
-      <form id="order-form" action="/buy_cart/" method="post" class="space-y-4">
+  <!-- Модальное окно оплаты -->
+  <div id="payment-modal" class="fixed inset-0 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-50 transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full max-w-md relative m-4 border border-gray-100">
+
+      <button onclick="document.getElementById('payment-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors focus:outline-none">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+
+      <h2 class="text-2xl font-extrabold text-slate-900 mb-6 text-center">{% trans "Payment Method" %}</h2>
+
+      <form id="order-form" action="{% url 'buy_cart' %}" method="post" class="space-y-5">
         {% csrf_token %}
+
+        <!-- Выбор способа оплаты -->
         <div class="flex flex-col gap-3">
-          <button type="button" onclick="document.getElementById('card-form').style.display='block';document.getElementById('paypal-form').style.display='none';document.getElementById('cash-form').style.display='none';document.getElementById('submit-order-btn').style.display='block'" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded">Pay by Card</button>
-          <button type="button" onclick="document.getElementById('card-form').style.display='none';document.getElementById('paypal-form').style.display='block';document.getElementById('cash-form').style.display='none';document.getElementById('submit-order-btn').style.display='block'" class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-800 py-2 rounded">PayPal</button>
-          <button type="button" onclick="document.getElementById('card-form').style.display='none';document.getElementById('paypal-form').style.display='none';document.getElementById('cash-form').style.display='block';document.getElementById('submit-order-btn').style.display='block'" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded">Cash on Delivery</button>
+          <button type="button" onclick="document.getElementById('card-form').style.display='block';document.getElementById('paypal-form').style.display='none';document.getElementById('cash-form').style.display='none';document.getElementById('submit-order-btn').style.display='block'" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-sm">
+            💳 {% trans "Pay by Card" %}
+          </button>
+          <button type="button" onclick="document.getElementById('card-form').style.display='none';document.getElementById('paypal-form').style.display='block';document.getElementById('cash-form').style.display='none';document.getElementById('submit-order-btn').style.display='block'" class="w-full bg-[#FFC439] hover:bg-[#F4A900] text-slate-900 font-semibold py-3 px-4 rounded-xl transition-all shadow-sm">
+            {% trans "PayPal" %}
+          </button>
+          <button type="button" onclick="document.getElementById('card-form').style.display='none';document.getElementById('paypal-form').style.display='none';document.getElementById('cash-form').style.display='block';document.getElementById('submit-order-btn').style.display='block'" class="w-full bg-gray-100 hover:bg-gray-200 text-slate-800 font-semibold py-3 px-4 rounded-xl transition-all border border-gray-200">
+            🚚 {% trans "Cash on Delivery" %}
+          </button>
         </div>
-        <div id="card-form" style="display:none;" class="mt-4 space-y-2">
-          <input type="text" name="card_number" placeholder="Card Number" class="w-full border rounded px-3 py-2" maxlength="19">
-          <input type="text" name="card_expiry" placeholder="MM/YY" class="w-full border rounded px-3 py-2" maxlength="5">
-          <input type="text" name="card_cvc" placeholder="CVC" class="w-full border rounded px-3 py-2" maxlength="4">
-          <input type="text" name="card_name" placeholder="Name on Card" class="w-full border rounded px-3 py-2">
+
+        <!-- Поля формы для карты -->
+        <div id="card-form" style="display:none;" class="space-y-3 pt-2">
+          <input type="text" name="card_number" placeholder="Card Number" class="w-full bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 outline-none transition-colors" maxlength="19">
+          <div class="flex gap-3">
+            <input type="text" name="card_expiry" placeholder="MM/YY" class="w-1/2 bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 outline-none transition-colors" maxlength="5">
+            <input type="text" name="card_cvc" placeholder="CVC" class="w-1/2 bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 outline-none transition-colors" maxlength="4">
+          </div>
+          <input type="text" name="card_name" placeholder="Name on Card" class="w-full bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 outline-none transition-colors">
         </div>
-        <div id="paypal-form" style="display:none;" class="mt-4 space-y-2">
-          <input type="email" name="email" placeholder="PayPal Email" class="w-full border rounded px-3 py-2">
+
+        <!-- Поля формы PayPal -->
+        <div id="paypal-form" style="display:none;" class="pt-2">
+          <input type="email" name="email" placeholder="PayPal Email" class="w-full bg-white border border-gray-300 text-slate-900 text-sm rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block p-3 outline-none transition-colors">
         </div>
-        <div id="cash-form" style="display:none;" class="mt-4 space-y-2">
-          <p class="text-gray-600">You will pay with cash upon delivery.</p>
+
+        <!-- Сообщение об оплате наличными -->
+        <div id="cash-form" style="display:none;" class="pt-2 bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+          <p class="text-sm font-medium text-gray-700">{% trans "You will pay with cash upon delivery." %}</p>
         </div>
-        <button id="submit-order-btn" type="submit" style="display:none;" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded">Confirm Order</button>
+
+        <!-- Кнопка подтверждения -->
+        <button id="submit-order-btn" type="submit" style="display:none;" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all mt-4">
+          {% trans "Confirm Order" %}
+        </button>
       </form>
+
     </div>
   </div>
+
+</div>
 {% endblock %}

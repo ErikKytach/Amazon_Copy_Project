@@ -1,41 +1,262 @@
 {% extends "base.html" %}
-{% block title %}Sign Up{% endblock %}
+{% load i18n %}
+
+{% block title %}{% trans "Sign Up" %} - Erizon{% endblock %}
+
 {% block content %}
-  <div class="bg-white p-8 rounded-2xl shadow-md w-full max-w-md mx-auto mt-10">
-    <h2 class="text-2xl font-bold text-center text-blue-600 mb-6">Create an Account</h2>
-    <form action="/registration/" method="post" class="space-y-4">
-      {% csrf_token %}
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-        {{ form.username }}
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-        {{ form.first_name }}
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-        {{ form.last_name }}
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
-        {{ form.email }}
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-        {{ form.phonenumber }}
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-        {{ form.password1 }}
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-        {{ form.password2 }}
-      </div>
-      <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md font-medium transition">
-        Sign Up
-      </button>
-    </form>
+<div class="max-w-xl mx-auto px-4 py-6 sm:py-10">
+
+  <!-- Заголовок страницы (компактный) -->
+  <div class="mb-5 text-center flex flex-col items-center">
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+      <svg class="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+      </svg>
+      {% trans "Create an Account" %}
+    </h1>
+    <p class="text-[13px] text-gray-500 mt-1.5">{% trans "Join us to get started with Erizon" %}</p>
   </div>
+
+  <!-- Карточка формы -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-7">
+
+    <!-- Блок вывода ошибок сервера -->
+    {% if form.errors %}
+      <div class="bg-rose-50 border border-rose-100 rounded-xl p-3 mb-5 flex items-start gap-2.5">
+        <svg class="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="text-[13px] text-rose-700 font-medium space-y-1">
+          {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+          {% for field in form %}
+            {% for error in field.errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <form action="{% url 'registration' %}" method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <!-- Скрытые поля -->
+      {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+      {% endfor %}
+
+      <!-- Ряд 1: Имя и Фамилия -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="id_first_name" class="block text-[13px] font-bold text-slate-800 mb-1">{% trans "First Name" %}</label>
+          <input type="text" name="first_name" id="id_first_name" required autofocus
+            class="w-full bg-white border border-gray-300 text-slate-900 text-[13px] rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block px-3 py-2.5 transition-colors outline-none"
+            {% if form.first_name.value %}value="{{ form.first_name.value }}"{% endif %} />
+        </div>
+        <div>
+          <label for="id_last_name" class="block text-[13px] font-bold text-slate-800 mb-1">{% trans "Last Name" %}</label>
+          <input type="text" name="last_name" id="id_last_name" required
+            class="w-full bg-white border border-gray-300 text-slate-900 text-[13px] rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block px-3 py-2.5 transition-colors outline-none"
+            {% if form.last_name.value %}value="{{ form.last_name.value }}"{% endif %} />
+        </div>
+      </div>
+
+      <!-- Ряд 2: Email и Телефон -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="id_email" class="block text-[13px] font-bold text-slate-800 mb-1">{% trans "Email" %}</label>
+          <input type="email" name="email" id="id_email" required
+            class="w-full bg-white border border-gray-300 text-slate-900 text-[13px] rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block px-3 py-2.5 transition-colors outline-none"
+            {% if form.email.value %}value="{{ form.email.value }}"{% endif %} />
+        </div>
+        <div>
+          <label for="id_phonenumber" class="block text-[13px] font-bold text-slate-800 mb-1">{% trans "Phone Number" %}</label>
+          <input type="text" name="phonenumber" id="id_phonenumber" required
+            class="w-full bg-white border border-gray-300 text-slate-900 text-[13px] rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block px-3 py-2.5 transition-colors outline-none"
+            {% if form.phonenumber.value %}value="{{ form.phonenumber.value }}"{% endif %} />
+        </div>
+      </div>
+
+      <!-- Ряд 3: Username -->
+      <div>
+        <label for="id_username" class="block text-[13px] font-bold text-slate-800 mb-1">{% trans "Username" %}</label>
+        <input type="text" name="username" id="id_username" required
+          class="w-full bg-white border border-gray-300 text-slate-900 text-[13px] rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block px-3 py-2.5 transition-colors outline-none"
+          {% if form.username.value %}value="{{ form.username.value }}"{% endif %} />
+
+        <!-- Компактная проверка Username (в 2 колонки) -->
+        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5 text-[11px] font-medium mt-2 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+          <li id="req-user-length" class="text-rose-500 transition-colors duration-300 flex items-center gap-1">
+            <span>✗</span> <span class="truncate">{% trans "At least 4 characters" %}</span>
+          </li>
+          <li id="req-user-alnum" class="text-rose-500 transition-colors duration-300 flex items-center gap-1">
+            <span>✗</span> <span class="truncate">{% trans "Letters and digits only" %}</span>
+          </li>
+          <li id="req-user-letter" class="text-rose-500 transition-colors duration-300 flex items-center gap-1">
+            <span>✗</span> <span class="truncate">{% trans "At least 1 letter" %}</span>
+          </li>
+          <li id="req-user-unique" class="text-rose-500 transition-colors duration-300 flex items-center gap-1">
+            <span>✗</span> <span class="truncate">{% trans "Username is available" %}</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Ряд 4: Пароли -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="id_password1" class="block text-[13px] font-bold text-slate-800 mb-1">{% trans "Password" %}</label>
+          <input type="password" name="password1" id="id_password1" required
+            class="w-full bg-white border border-gray-300 text-slate-900 text-[13px] rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block px-3 py-2.5 transition-colors outline-none" />
+        </div>
+        <div>
+          <label for="id_password2" class="block text-[13px] font-bold text-slate-800 mb-1">{% trans "Confirm Password" %}</label>
+          <input type="password" name="password2" id="id_password2" required
+            class="w-full bg-white border border-gray-300 text-slate-900 text-[13px] rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 block px-3 py-2.5 transition-colors outline-none" />
+        </div>
+      </div>
+
+      <!-- Компактная проверка Паролей (в 2 колонки, включая совпадение) -->
+      <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1.5 text-[11px] font-medium mt-1 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+        <li id="req-length" class="text-rose-500 transition-colors duration-300 flex items-center gap-1">
+          <span>✗</span> <span class="truncate">{% trans "At least 8 characters" %}</span>
+        </li>
+        <li id="req-letter" class="text-rose-500 transition-colors duration-300 flex items-center gap-1">
+          <span>✗</span> <span class="truncate">{% trans "At least 1 letter" %}</span>
+        </li>
+        <li id="req-number" class="text-rose-500 transition-colors duration-300 flex items-center gap-1">
+          <span>✗</span> <span class="truncate">{% trans "At least 1 digit" %}</span>
+        </li>
+        <li id="req-special" class="text-rose-500 transition-colors duration-300 flex items-center gap-1">
+          <span>✗</span> <span class="truncate">{% trans "Without spaces or periods" %}</span>
+        </li>
+        <li id="req-match" class="text-rose-500 transition-colors duration-300 flex items-center gap-1 sm:col-span-2">
+          <span>✗</span> <span>{% trans "Passwords match" %}</span>
+        </li>
+      </ul>
+
+      <!-- Кнопка регистрации -->
+      <div class="pt-2">
+        <button type="submit" id="submit-btn" disabled
+          class="w-full group relative inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-orange-500 text-white text-[15px] font-bold py-2.5 px-8 rounded-xl shadow-md transition-all duration-300 opacity-50 cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1 disabled:hover:bg-gray-900">
+          <span>{% trans "Sign Up" %}</span>
+          <svg class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </button>
+      </div>
+    </form>
+
+    <!-- Переход на страницу логина -->
+    <div class="mt-5 pt-5 border-t border-gray-100">
+      <p class="text-[13px] text-center text-gray-500 mb-3">
+        {% trans "Already have an account?" %}
+      </p>
+      <a href="/login/"
+        class="w-full flex justify-center items-center gap-2 bg-white border border-gray-200 hover:border-orange-500 hover:bg-orange-50 hover:text-orange-600 text-[14px] text-gray-700 font-bold py-2.5 px-4 rounded-xl transition-all duration-300 shadow-sm active:scale-[0.98]">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+        </svg>
+        <span>{% trans "Log In" %}</span>
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+    // JS остался без изменений, так как ID элементов и классы проверки идентичны прошлой версии
+    const password1Input = document.getElementById('id_password1');
+    const password2Input = document.getElementById('id_password2');
+    const usernameInput = document.getElementById('id_username');
+    const submitBtn = document.getElementById('submit-btn');
+
+    const reqs = {
+        length: document.getElementById('req-length'),
+        letter: document.getElementById('req-letter'),
+        number: document.getElementById('req-number'),
+        special: document.getElementById('req-special'),
+        match: document.getElementById('req-match'),
+        user_length: document.getElementById('req-user-length'),
+        user_alnum: document.getElementById('req-user-alnum'),
+        user_letter: document.getElementById('req-user-letter'),
+        user_unique: document.getElementById('req-user-unique')
+    };
+
+    let isUsernameAvailable = false;
+    let checkTimeout = null;
+
+    function validateForm() {
+        const pass1 = password1Input.value;
+        const pass2 = password2Input.value;
+        const user = usernameInput.value;
+
+        const checks = {
+            length: pass1.length >= 8,
+            letter: /[A-Za-zА-Яа-я]/.test(pass1),
+            number: /\d/.test(pass1),
+            special: !/[\s.]/.test(pass1) && pass1.length > 0,
+            match: pass1 === pass2 && pass1.length > 0,
+            user_length: user.length >= 4,
+            user_alnum: /^[A-Za-zА-Яа-я0-9]+$/.test(user) && user.length > 0,
+            user_letter: /[A-Za-zА-Яа-я]/.test(user),
+            user_unique: isUsernameAvailable
+        };
+
+        let isFormValid = true;
+
+        for (const key in checks) {
+            const span = reqs[key].querySelector('span');
+
+            if (checks[key]) {
+                reqs[key].classList.add('text-emerald-500');
+                reqs[key].classList.remove('text-rose-500');
+                if(span) span.textContent = '✓';
+            } else {
+                reqs[key].classList.remove('text-emerald-500');
+                reqs[key].classList.add('text-rose-500');
+                if(span) span.textContent = '✗';
+                isFormValid = false;
+            }
+        }
+
+        if (isFormValid) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    usernameInput.addEventListener('input', () => {
+        clearTimeout(checkTimeout);
+        isUsernameAvailable = false;
+        validateForm();
+
+        const userVal = usernameInput.value;
+        const isReservedName = userVal.toLowerCase().includes('admin');
+
+        if (userVal.length >= 4 && /^[A-Za-zА-Яа-я0-9]+$/.test(userVal) && /[A-Za-zА-Яа-я]/.test(userVal)) {
+            if (isReservedName) {
+                isUsernameAvailable = false;
+                validateForm();
+            } else {
+                checkTimeout = setTimeout(() => {
+                    fetch(`/check_username/?username=${userVal}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            isUsernameAvailable = !data.is_taken;
+                            validateForm();
+                        });
+                }, 400);
+            }
+        }
+    });
+
+    password1Input.addEventListener('input', validateForm);
+    password2Input.addEventListener('input', validateForm);
+    validateForm();
+</script>
 {% endblock %}

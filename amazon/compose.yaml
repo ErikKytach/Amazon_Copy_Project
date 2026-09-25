@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - /etc/erizon/erizon.env
+    ports:
+      - "127.0.0.1:8011:8000"
+    volumes:
+      - ./staticfiles:/app/staticfiles
